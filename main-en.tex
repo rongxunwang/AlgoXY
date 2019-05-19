@@ -6,7 +6,7 @@
 
 % ==================== Book flag==========================
 
-\global\let\wholebook=\relax %without relax, we build article, esle book
+\global\let\wholebook=\relax %without relax, we build article, else book
 
 \graphicspath{
 	{img/}
@@ -77,8 +77,6 @@
 
 \input{datastruct/tree/trie/trie-en.tex}
 
-\input{datastruct/tree/suffix-tree/stree-en.tex}
-
 \input{datastruct/tree/B-tree/btree-en.tex}
 
 
@@ -107,6 +105,12 @@
 \addappheadtotoc
 
 \input{others/appendix/list/list-en.tex}
+
+\subimport{others/appendix/rbt-del/}{rbt-del-en.tex}
+
+\subimport{others/appendix/avltree/}{avl-proof-en.tex}
+
+\subimport{datastruct/tree/suffix-tree/}{stree-en.tex}
 
 \input{fdl-1.3.tex}
 

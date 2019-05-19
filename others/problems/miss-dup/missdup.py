@@ -2,17 +2,17 @@
 
 # missdup.py
 # Copyright (C) 2014 Liu Xinyu (liuxinyu95@gmail.com)
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -83,7 +83,8 @@ def solve2(xs):
     b = sum(map(lambda (a, b): a*a - b*b, ys))
     return ((b/a - a)/2, (a + b/a)/2)
 
-# method 3, 
+# method 3,
+# pigeonhole sort
 def solve3(xs):
     (miss, dup) = (-1, -1)
     for i in range(len(xs)):
@@ -98,6 +99,23 @@ def solve3(xs):
                 (xs[i], xs[j]) = (xs[j], xs[i])
     return (miss, dup)
 
+# method 4,
+#   sgn encode
+def solve4(xs):
+    miss, dup = -1, -1
+    n = len(xs)
+    for i in range(n):
+        xs[i] = xs[i] + 1 # change from 0 ~ n-1, to 1 ~ n
+    s = sum(xs)
+    for i in range(n):
+        j = abs(xs[i]) - 1
+        if xs[j] < 0:
+            dup = j
+            miss = dup + n * (n + 1) / 2 - s
+            break
+        xs[j] = - abs(xs[j])
+    return (miss, dup)
+
 def test_solve():
     for i in range(100):
         n = random.randint(0, 10000)
@@ -107,9 +125,10 @@ def test_solve():
         dup = random.choice(xs)
         xs.append(dup)
         random.shuffle(xs)
-        assert(solve(xs[0:n]) == (lost, dup))
-        assert(solve_inplace(xs[0:n]) == (lost, dup))
-        assert(solve3(xs[0:n]), (lost, dup))
+        __assert(solve(xs[0:n]), (lost, dup))
+        __assert(solve_inplace(xs[0:n]), (lost, dup))
+        __assert(solve3(xs[0:n]), (lost, dup))
+        __assert(solve4(xs[0:n]), (lost, dup))
 
 def __assert(x, y):
     if x != y:
@@ -118,6 +137,6 @@ def __assert(x, y):
 
 def test():
     test_solve()
-    
+
 if __name__=="__main__":
     test()

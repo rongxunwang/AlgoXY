@@ -163,8 +163,8 @@ For example, the following Haskell code specifies the abstract queue.
 class Queue q where
     empty :: q a
     isEmpty :: q a -> Bool
-    push :: q a -> a -> q a     -- Or named as 'snoc', append, push_back
-    pop :: q a -> q a           -- Or named as 'tail', pop_front
+    push :: q a -> a -> q a     -- Or named as 'snoc', append, push\_back
+    pop :: q a -> q a           -- Or named as 'tail', pop\_front
     front :: q a -> a           -- Or named as 'head'
 \end{lstlisting}
 
@@ -289,41 +289,43 @@ memories, the queue can be defined with the below ANSI C code.
 
 \lstset{language=C}
 \begin{lstlisting}
-struct Queue {
-  Key* buf;
-  int head, tail, size;
+struct QueueBuf{
+    Key* buf;
+    int head, cnt, size;
 };
 \end{lstlisting}
 
 When initialize the queue, we are explicitly asked to provide the maximum
-size as argument.
+size as the parameter.
 
 \begin{lstlisting}
-struct Queue* createQ(int max) {
-  struct Queue* q = (struct Queue*)malloc(sizeof(struct Queue));
-  q->buf = (Key*)malloc(sizeof(Key)*max);
-  q->size = max;
-  q->head = q->tail = 0;
-  return q;
+struct QueueBuf* createQ(int max){
+    struct QueueBuf* q = (struct QueueBuf*)malloc(sizeof(struct QueueBuf));
+    q->buf = (Key*)malloc(sizeof(Key)*max);
+    q->size = max;
+    q->head = q->cnt = 0;
+    return q;
 }
 \end{lstlisting}
 
-To test if a queue is empty is trivial.
+With the counter variable, we can compare it with zero and the capacity to
+test if the queue is empty or full.
 
 \begin{algorithmic}
 \Function{Empty?}{$Q$}
-  \State \Return \Call{Head}{$Q$} = \Call{Tail}{$Q$}
+  \State \Return \Call{Count}{$Q$} = 0
 \EndFunction
 \end{algorithmic}
 
-One brute-force implementation for \textproc{Enqueue} and \textproc{Dequeue}
-is to calculate the modular of index blindly as the following.
+To realize \textproc{Enqueue} and \textproc{Dequeue}, an easy way
+is to calculate the modular of index as the following.
 
 \begin{algorithmic}
 \Function{Enqueue}{$Q, x$}
   \If{$\lnot$ \Call{Full?}{$Q$}}
-    \State \Call{Tail}{$Q$} $\gets $ (\Call{Tail}{$Q$} + 1) $\mod$ \Call{Size}{$Q$}
-    \State \Call{Buffer}{$Q$}[\Call{Tail}{$Q$}] $\gets x$
+    \State \Call{Count}{$Q$} $\gets$ \Call{Count}{$Q$} + 1
+    \State tail $\gets $ (\Call{Head}{$Q$} + \Call{Count}{$Q$}) $\mod$ \Call{Size}{$Q$}
+    \State \Call{Buffer}{$Q$}[tail] $\gets x$
   \EndIf
 \EndFunction
 \end{algorithmic}
@@ -340,6 +342,7 @@ is to calculate the modular of index blindly as the following.
 \Function{Dequeue}{$Q$}
   \If{$\lnot$ \Call{Empty?}{$Q$}}
     \State \Call{Head}{$Q$} $\gets $ (\Call{Head}{$Q$} + 1) $\mod$ \Call{Size}{$Q$}
+    \State \Call{Count}{$Q$} $\gets$ \Call{Count}{$Q$} - 1
   \EndIf
 \EndFunction
 \end{algorithmic}
@@ -349,30 +352,29 @@ may replace it by some adjustment. For example as in the below ANSI C
 program.
 
 \begin{lstlisting}
-void enQ(struct Queue* q, Key x) {
-  if(!fullQ(q)) {
-    q->buf[q->tail++] = x;
-    q->tail -= q->tail< q->size ? 0 : q->size;
-  }
+void enQ(struct QueueBuf* q, Key x){
+    if(!fullQ(q)){
+        q->buf[offset(q->head + q->cnt, q->size)] = x;
+        q->cnt++;
+    }
 }
 
 Key headQ(struct Queue* q) {
-  return q->buf[q->head]; /* Assume queue isn't empty */
+    return q->buf[q->head];  //假设队列不为空。
 }
 
-Key deQ(struct Queue* q) {
-  Key x = headQ(q);
-  q->head++;
-  q->head -= q->head< q->size ? 0 : q->size;
-  return x;
+Key deQ(struct QueueBuf* q){
+    Key x = headQ(q);
+    q->head = offset(++q->head, q->size);
+    q->cnt--;
+    return x;
 }
 \end{lstlisting}
 
 \begin{Exercise}
-As the circular buffer is allocated with a maximum size parameter, please
-write a function to test if a queue is full to avoid overflow. Note
-there are two cases, one is that the head is in front of the tail,
-the other is on the contrary.
+The circular buffer is allocated with a maximum size parameter. Can we
+test the queue is empty or full with only head and tail pointers?
+Note that the head can be either before or after the tail.
 \end{Exercise}
 
 % ================================================================
@@ -938,7 +940,7 @@ data State a = Reverse [a] [a] [a] [a]
 Because we reverse $F$ and $R$ simultaneously, so reversing state takes two
 pairs of lists and accumulators.
 
-The state transfering is defined according to the two phases strategy described
+The state transferring is defined according to the two phases strategy described
 previously.
 Denotes that $F = \{ f_1, f_2, ... \}$, $F' = tail(F) = \{f_2, f_3, ... \}$,
 $R = \{ r_1, r_2, ... \}$, $R' = tail(R) = \{ r_2, r_3, ... \}$. A state $\mathcal{S}$,
@@ -1065,14 +1067,14 @@ becomes zero, we needn't do concatenations any more.
 We can give the realization of purely functional real-time queue according to the above
 analysis.
 
-We first add an idle state $S_0$ to simplify some state transfering. Below Haskell program
+We first add an idle state $S_0$ to simplify some state transferring. Below Haskell program
 is an example of this modified state definition.
 
 \lstset{language=Haskell}
 \begin{lstlisting}
 data State a = Empty
-             | Reverse Int [a] [a] [a] [a] -- n, f', acc_f' r, acc_r
-             | Append Int [a] [a]          -- n, rev_f', acc
+             | Reverse Int [a] [a] [a] [a] -- n, f', acc\_f' r, acc\_r
+             | Append Int [a] [a]          -- n, rev\_f', acc
              | Done [a] -- result: f ++ reverse r
 \end{lstlisting}
 
@@ -1361,7 +1363,7 @@ Function \texttt{cons-stream} constructs a 'lazy' list from an element $x$
 and an existing list $L$ without really evaluating
 the value of $L$; The evaluation is actually delayed to
 \texttt{stream-cdr}, where the computation is forced. delaying can
-be realized by lambda calculus as decribed in\cite{SICP}.
+be realized by lambda calculus as described in\cite{SICP}.
 
 The lazy paired-list queue is defined as the following.
 
@@ -1536,7 +1538,7 @@ in several previous chapters.
 
 \begin{Exercise}
 \begin{itemize}
-\item Realize dequeue, wich support adding and removing elements on both sides in
+\item Realize dequeue, which support adding and removing elements on both sides in
 constant $O(1)$ time in purely functional way.
 \item Realize dequeue in a symmetric solution only with array in your
 favorite imperative programming language.

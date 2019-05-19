@@ -147,7 +147,7 @@ sort(L) = \left \{
 \ee
 
 Where $l_1$ is the first element of the non-empty list $L$, and $L'$ contains the rest elements $\{l_2, l_3, ...\}$.
-Note that we use Zermelo Frankel expression (ZF expression for short)\footnote{Name for the two mathematicans who found the modern set theory.}, which is also known as list
+Note that we use Zermelo Frankel expression (ZF expression for short)\footnote{Name for the two mathematics who found the modern set theory.}, which is also known as list
 comprehension. A ZF expression $\{ a | a \in S, p_1(a), p_2(a), ... \}$ means taking all element in set $S$,
 if it satisfies all the predication $p_1, p_2, ...$. ZF expression is originally used for representing
 {\em set}, we extend it to express list for the sake of brevity. There can be duplicated elements, and
@@ -2094,17 +2094,36 @@ to the working area.
 \end{algorithmic}
 
 Different from the naive in-place sort, this algorithm doesn't shift the array during merging. The main
-algorithm reduces the unsorted part in sequence of $\frac{n}{2}, \frac{n}{4}, \frac{n}{8}, ...$, it takes $O(\lg n)$ steps to complete
+algorithm reduces the unsorted part in sequence of $\dfrac{n}{2}, \dfrac{n}{4}, \dfrac{n}{8}, ...$, it takes $O(\lg n)$ steps to complete
 sorting. In every step, It recursively sorts half of the rest elements, and performs linear time merging.
 
 Denote the time cost of sorting $n$ elements as $T(n)$, we have the following equation.
 
 \be
 T(n) = T(\frac{n}{2}) + c \frac{n}{2} + T(\frac{n}{4}) + c \frac{3n}{4} + T(\frac{n}{8}) + c \frac{7n}{8} + ...
+\label{eq:in-place-sort-time}
 \ee
 
-Solving this equation by using telescope method, gets the result $O(n \lg n)$. The detailed process is
-left as exercise to the reader.
+substitute $n$ with its half, we get another one:
+
+\be
+T(\frac{n}{2}) = T(\frac{n}{4}) + c \frac{n}{4} + T(\frac{n}{8}) + c \frac{3n}{8} + T(\frac{n}{16}) + c \frac{7n}{16} + ...
+\label{eq:in-place-sort-time-half}
+\ee
+
+Substract (\ref{eq:in-place-sort-time}) and (\ref{eq:in-place-sort-time-half}) we have:
+
+\[
+T(n) - T(\frac{n}{2}) = T(\frac{n}{2}) + c n (\frac{1}{2} + \frac{1}{2} + ... )
+\]
+
+There are total $\lg n$ times $\dfrac{1}{2}$ added together, therefore, the recursive time can be expressed as:
+
+\[
+T(n) = 2 T(\frac{1}{2}) + c n \lg n
+\]
+
+Solving this equation by using telescope method, gets the result $O(n \lg^2 n)$.
 
 The following ANSI C code completes the implementation by using the example \texttt{wmerge} program given
 above.
@@ -2410,7 +2429,7 @@ to indicate the direction for merging.
 \end{algorithmic}
 
 The following ANSI C program implements this two-way nature merge sort algorithm. Note that it
-doesn't release the allocated working area explictly.
+doesn't release the allocated working area explicitly.
 
 \lstset{language=C}
 \begin{lstlisting}
@@ -2726,14 +2745,14 @@ sorting in $T'$ time with parallelism, which satisifies $O(n \lg n) = p T'$. We 
 is linear speed up, and the algorithm is parallel optimal.
 
 However, a straightforward parallel extension to the sequential quick sort algorithm
-which samples several pivots, divides $p$ sub sequences, and independantly
+which samples several pivots, divides $p$ sub sequences, and independently
 sorts them in parallel, isn't optimal. The bottleneck exists in the
-divide phase, which we can only achive $O(n)$ time in average case.
+divide phase, which we can only achieve $O(n)$ time in average case.
 
-The straightforward parallel extention to merge sort, on the other hand, block
+The straightforward parallel extension to merge sort, on the other hand, block
 at the merge phase. Both parallel merge sort and quick sort in practice need
-good designes in order to achieve the optimal speed up. Actually, the divide and
-conqure nature makes merge sort and quick sort relative easy for parallelisim.
+good designs in order to achieve the optimal speed up. Actually, the divide and
+conquer nature makes merge sort and quick sort relative easy for parallelisim.
 Richard Cole found the $O(\lg n)$ parallel merge sort algorithm with $n$ processors
 in 1986 in \cite{para-msort}.
 
